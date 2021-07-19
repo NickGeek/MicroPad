@@ -21,7 +21,7 @@ import { IInsertElementState } from './reducers/NoteReducer';
 import { CombinedNotepadSyncList, SyncLoginRequest, SyncUser } from './types/SyncTypes';
 import { FlatNotepad, Notepad, Translators } from 'upad-parse/dist';
 import { NoteElement } from 'upad-parse/dist/Note';
-import { HashTagSearchResults } from './reducers/SearchReducer';
+import { SearchResults } from './reducers/SearchReducer';
 import { ThemeName } from './types/Themes';
 import { DueItem } from './services/DueDates';
 
@@ -66,6 +66,7 @@ export const actions = {
 	getHelp: actionCreator.async<void, void, Error>('GET_HELP'),
 	getDueDates: actionCreator.async<string[], DueItem[], Error>('GET_DUE_DATES'),
 	moveObjAcrossNotepads: actionCreator.async<MoveAcrossNotepadsAction, void, Error>('CROSS_NOTEPAD_MOVE'),
+	search: actionCreator.async<string, SearchResults, Error>('SEARCH'),
 
 	restoreJsonNotepad: actionCreator<string>('PARSE_JSON_NOTEPAD'),
 	restoreJsonNotepadAndLoadNote: actionCreator<RestoreJsonNotepadAndLoadNoteAction>('PARSE_JSON_NOTEPAD_AND_LOAD_NOTE'),
@@ -77,8 +78,6 @@ export const actions = {
 	exportNotepad: actionCreator<void>('EXPORT_NOTEPAD'),
 	expandSection: actionCreator<string>('OPEN_SECTION'),
 	collapseSelection: actionCreator<string>('CLOSE_SECTION'),
-	search: actionCreator<string>('SEARCH'),
-	displayHashTagSearchResults: actionCreator<HashTagSearchResults>('DISPLAY_HASH_TAG_SEARCH_RESULTS'),
 	deleteNotepadObject: actionCreator<string>('DELETE_NOTEPAD_OBJECT'),
 	renameNotepadObject: actionCreator<IRenameNotepadObjectAction>('RENAME_NOTEPAD_OBJECT'),
 	expandFromNote: actionCreator<ExpandFromNoteAction>('EXPAND_FROM_NOTE'),
@@ -117,7 +116,10 @@ export const actions = {
 	encryptNotepad: actionCreator<string>('ENCRYPT_NOTEPAD'),
 	addCryptoPasskey: actionCreator<AddCryptoPasskeyAction>('ADD_CRYPTO_PASSKEY'),
 	closeNotepad: actionCreator<void>('CLOSE_NOTEPAD'),
-	importMarkdown: actionCreator<Translators.Markdown.MarkdownImport[]>('IMPORT_FROM_MARKDOWN')
+	importMarkdown: actionCreator<Translators.Markdown.MarkdownImport[]>('IMPORT_FROM_MARKDOWN'),
+	setExplorerWidth: actionCreator<string>('SET_EXPLORER_WIDTH'),
+	feelingLucky: actionCreator<void>('FEELING_LUCKY'),
+	setSearchResultVisibility: actionCreator<boolean>('SET_SEARCH_RESULT_VISIBILITY')
 };
 
 export const READ_ONLY_ACTIONS: ReadonlySet<string> = new Set<string>([

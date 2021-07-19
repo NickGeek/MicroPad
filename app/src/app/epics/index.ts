@@ -1,6 +1,6 @@
 // @ts-ignore
 // eslint-disable-next-line import/no-webpack-loader-syntax
-import helpNpx from '!raw-loader!../assets/Help.npx';
+import helpNpx from '../assets/Help.npx';
 
 import { combineEpics, createEpicMiddleware } from 'redux-observable';
 import { notepadEpics$ } from './NotepadEpics';
@@ -19,6 +19,8 @@ import { dueDatesEpics$ } from './DueDatesEpics';
 import { Dispatch, MiddlewareAPI } from 'redux';
 import { IStoreState } from '../types';
 import ToastEventHandler from '../services/ToastEventHandler';
+import { NotificationService } from '../services/NotificationService';
+import { feelingLuckyEpics$ } from './FeelingLuckyEpics';
 
 const baseEpic$ = combineEpics(
 	notepadEpics$,
@@ -31,14 +33,16 @@ const baseEpic$ = combineEpics(
 	printEpics$,
 	syncEpics$,
 	cryptoEpics$,
-	dueDatesEpics$
+	dueDatesEpics$,
+	feelingLuckyEpics$
 );
 
 export type EpicDeps = {
 	helpNpx: string,
 	getStorage: () => StorageMap,
 	now: () => Date,
-	getToastEventHandler: () => ToastEventHandler
+	getToastEventHandler: () => ToastEventHandler,
+	notificationService: NotificationService
 };
 
 export const epicMiddleware = createEpicMiddleware<Action<any>, any, EpicDeps>(baseEpic$, {
@@ -46,7 +50,8 @@ export const epicMiddleware = createEpicMiddleware<Action<any>, any, EpicDeps>(b
 		helpNpx,
 		getStorage: getStorage,
 		now: () => new Date(),
-		getToastEventHandler: () => TOAST_HANDLER
+		getToastEventHandler: () => TOAST_HANDLER,
+		notificationService: new NotificationService()
 	}
 });
 

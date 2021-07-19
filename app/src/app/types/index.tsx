@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { INotepadsStoreState } from './NotepadTypes';
 import { IExplorerState } from '../reducers/ExplorerReducer';
 import { ISearchState } from '../reducers/SearchReducer';
@@ -21,9 +21,25 @@ export interface IStoreState {
 	readonly isExporting: IsExportingState;
 }
 
-export type IAppWindow = Window & typeof globalThis & {
-	isElectron: boolean
+export type MicroPadGlobals = {
+	currentModalId?: string
 };
+declare global {
+	interface Window {
+		MicroPadGlobals: MicroPadGlobals
+		isElectron?: boolean,
+		toastEvent: (guid: string) => void,
+
+		/** This is just missing from TS typings */
+		crossOriginIsolated?: boolean
+	}
+
+	const build: {
+		defs: {
+			SYNC_WORKER_PATH: string;
+		}
+	}
+}
 
 export const APP_NAME = 'µPad';
 export const SYNC_NAME = 'µSync';

@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { SyntheticEvent } from 'react';
+import React, { SyntheticEvent } from 'react';
 import { INoteElementComponentProps } from './NoteElementComponent';
 import { Button, Row } from 'react-materialize';
 import { dataURItoBlob } from '../../../util';
@@ -27,7 +26,7 @@ export default class FileElementComponent extends React.Component<IFileElementCo
 					{
 						!isEditing &&
 						!!element.args.filename &&
-						<Button className="blue" waves="light" onClick={() => downloadAsset(element.args.filename!, element.args.ext!)}>
+						<Button className="accent-btn" waves="light" onClick={() => downloadAsset(element.args.filename!, element.args.ext!)}>
 							Download File
 						</Button>
 					}

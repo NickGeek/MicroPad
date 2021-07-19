@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { ConnectedProps } from 'react-redux';
 import { moveConnector } from './MoveContainer';
 import { SYNC_NAME } from '../../../types';
@@ -15,7 +15,7 @@ const MoveComponent = (props: Props) => {
 	if (!currentNotepad) return null;
 
 	return (
-		<div>
+		<div className="explorer-options-modal__move">
 			<h5>Move {props.type} to another notebook</h5>
 			<p>
 				<em>

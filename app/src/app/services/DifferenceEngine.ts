@@ -1,19 +1,15 @@
-// @ts-ignore
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import SyncWorker from '!workerize-loader!../workers/SyncWorker.js';
-
-import { from, Observable, of } from 'rxjs';
+import { from, fromEvent, Observable, of } from 'rxjs';
 import { MICROPAD_URL } from '../types';
-import { concatMap, map, retry } from 'rxjs/operators';
-import { AssetList, INotepadSharingData, ISyncedNotepad, ISyncWorker, SyncedNotepadList } from '../types/SyncTypes';
+import { concatMap, filter, map, retry, take } from 'rxjs/operators';
+import { AssetList, INotepadSharingData, ISyncedNotepad, SyncedNotepadList } from '../types/SyncTypes';
 import { parse } from 'date-fns';
-import * as QueryString from 'querystring';
 import { LAST_MODIFIED_FORMAT, Notepad } from 'upad-parse/dist';
 import { ajax, AjaxResponse } from 'rxjs/ajax';
 import { encrypt } from 'upad-parse/dist/crypto';
-import { checksum } from 'asset-checksum';
+import { generateGuid } from '../util';
+import { getAssetInfoImpl } from '../workers/sync-worker/sync-worker-impl';
 
-const SyncThread = new SyncWorker() as ISyncWorker;
+const SyncThread = new Worker(build.defs.SYNC_WORKER_PATH, { type: 'module' });
 
 export const AccountService = (() => {
 	const call = <T>(endpoint: string, resource: string, payload?: object) => callApi<T>('account', endpoint, resource, payload);
@@ -76,17 +72,31 @@ export const SyncService = (() => {
 			map(res => res.assetsToUpload)
 		);
 
-	const deleteNotepad = (syncId: string): Observable<void> => call<void>('delete', syncId);
+	const deleteNotepad = (syncId: string, username: string, token: string): Observable<void> => call<void>('delete', syncId, {
+		username,
+		token
+	});
 
 	async function notepadToSyncedNotepad(notepad: Notepad): Promise<ISyncedNotepad> {
-		const { assets, notepadAssets } = await SyncThread.getAssetInfo(notepad);
+		const cid = generateGuid();
+		const res$ = fromEvent<MessageEvent>(SyncThread, 'message').pipe(
+			filter(event => event.data?.cid === cid),
+			map(event => {
+				if (event.data.error) throw event.data.error;
+				return event.data;
+			}),
+			take(1)
+		);
 
-		const assetHashList = {};
-		for (const [assetId, buffer] of Object.entries(assets)) {
-			assetHashList[assetId] = checksum(new Uint8Array(buffer));
-		}
+		const getAssetInfo$: ReturnType<typeof getAssetInfoImpl> = res$.toPromise();
+		SyncThread.postMessage({
+			cid,
+			type: 'getAssetInfo',
+			flatNotepad: notepad.flatten()
+		});
 
-		return Object.assign({}, notepad, { assetHashList, notepadAssets });
+		const { assets } = await getAssetInfo$;
+		return Object.assign({}, notepad, { assetHashList: assets });
 	}
 
 	return {
@@ -128,7 +138,7 @@ export function uploadAsset(url: string, asset: Blob): Observable<void> {
 
 function callApi<T>(parent: string, endpoint: string, resource: string, payload?: object, method?: string): Observable<T> {
 	return ajax({
-		url: `${devServer() ? 'http://localhost:48025' : MICROPAD_URL}/diffeng/${parent}/${endpoint}/${resource}`,
+		url: `${shouldUseDevApi() ? 'http://localhost:48025' : MICROPAD_URL}/diffeng/${parent}/${endpoint}/${resource}`,
 		method: method || (!payload) ? 'GET' : 'POST',
 		body: payload,
 		crossDomain: true,
@@ -143,7 +153,7 @@ function callApi<T>(parent: string, endpoint: string, resource: string, payload?
 	);
 }
 
-function devServer(): boolean {
+function shouldUseDevApi(): boolean {
 	// eslint-disable-next-line no-restricted-globals
-	return !!QueryString.parse(location.search.slice(1)).local;
+	return !!new URLSearchParams(location.search).get('local');
 }
